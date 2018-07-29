@@ -1,7 +1,3 @@
-console.log("=-=-==-=-=")
-console.log("|| LIRI ||")
-console.log("=-=-==-=-=\n")
-
 require("dotenv").config();
 var Spotify = require('node-spotify-api')
 var tumblr = require('tumblr');
@@ -15,27 +11,38 @@ var blog = new tumblr.Blog('potcakebubs.tumblr.com', keys.oauth);
 var nodeArgs = process.argv;
 var userCommand = process.argv[2];
 var userInput = "";
+var userInputForLog = ""
 for (var i = 3; i < nodeArgs.length; i++) {
 
-if (i > 3 && i < nodeArgs.length) {
-    userInput = userInput + "+" + nodeArgs[i];
-}
-else {
-    userInput += nodeArgs[i];
-}
+    if (i > 3 && i < nodeArgs.length) {
+        userInput = userInput + "+" + nodeArgs[i];
+        userInputForLog += " " + nodeArgs[i]
+    }
+    else {
+        userInput += nodeArgs[i];
+        userInputForLog += nodeArgs[i]
+    }
 }
 
+console.log("\n=-=-==-=-=")
+console.log("|| LIRI ||")
+console.log("=-=-==-=-=\n")
+
+fs.appendFile('log.txt', "User Request: " + userCommand + " " + userInputForLog + "\n", (err) => {
+    if (err) throw err;
+  });
 
 var musicSearch = function(musicQuery){
     spotify
     .search({ type: 'track', query: musicQuery , limit: 1 })
     .then(function(response) {
-        console.log("\nSpotify Track Search Results: \n")
-        console.log("Track Name: " + response.tracks.items[0].name)
-        console.log("Artist: " + response.tracks.items[0].album.artists[0].name)
-        console.log("Album: " + response.tracks.items[0].album.name)
-        console.log("Preview URL: " + response.tracks.items[0].preview_url)
-        console.log('\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n')
+        var spotifyOutput = "\nSpotify Track Search Results: \nTrack Name: " + response.tracks.items[0].name+"\nArtist: " + response.tracks.items[0].album.artists[0].name + "\nAlbum: " + response.tracks.items[0].album.name + "\nPreview URL: " + response.tracks.items[0].preview_url + '\n\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
+
+        console.log(spotifyOutput)
+
+        fs.appendFile('log.txt', spotifyOutput + "\n", (err) => {
+            if (err) throw err;
+          });
     })
     .catch(function(err) {
         console.log(err);
@@ -48,16 +55,11 @@ var movieSearch = function(movieQuery){
     request(queryUrl, function(error, response, body) {
         // If the request is successful
         if (!error && response.statusCode === 200) {
-            console.log("\nOMDB Movie Search Results: \n")
-            console.log("Movie Title: " + JSON.parse(body).Title);
-            console.log("Release Year: " + JSON.parse(body).Year);
-            console.log("Starring: " + JSON.parse(body).Actors);
-            console.log("IMDB Rating: " + JSON.parse(body).imdbRating);
-            console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings[1].Value);
-            console.log("Plot: " + JSON.parse(body).Plot);
-            console.log("Country Produced in: " + JSON.parse(body).Country);
-            console.log("Laguage: " + JSON.parse(body).Language);
-            console.log('\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n')
+            var movieOutput = "\nOMDB Movie Search Results: \n\nMovie Title: " + JSON.parse(body).Title + "\nRelease Year: " + JSON.parse(body).Year + "\nStarring: " + JSON.parse(body).Actors + "\nIMDB Rating: " + JSON.parse(body).imdbRating + "\nRotten Tomatoes Rating: " + JSON.parse(body).Ratings[1].Value + "\nPlot: " + JSON.parse(body).Plot + "\nCountry Produced in: " + JSON.parse(body).Country + "\nLaguage: " + JSON.parse(body).Language + '\n\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
+            console.log(movieOutput)
+            fs.appendFile('log.txt', movieOutput + "\n", (err) => {
+                if (err) throw err;
+              });
         }
     });
 }
@@ -67,16 +69,18 @@ var movieSearch = function(movieQuery){
 if(userCommand === 'my-tumblr'){
  
     blog.posts({limit: 20}, function(error, response) {
-    if (error) {
-        throw new Error(error);
-    }
-    console.log("\nRecent Tumblr Posts: \n")
-    for(var i = 0 ; i < response.posts.length; i++){
-        console.log('Post Title: ' + response.posts[i].summary);
-        console.log('Post Content: ' + response.posts[i].body);
-        console.log('Date of Post: ' + response.posts[i].date);
-        console.log('\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n')
-    }
+        if (error) {
+            throw new Error(error);
+        }
+        var postOutput = ""
+        for(var i = 0 ; i < response.posts.length; i++){
+            postOutput += 'Post Title: ' + response.posts[i].summary + "\nPost Content: " + response.posts[i].body + '\nDate of Post: ' + response.posts[i].date + "\n\n";
+        }
+        var tumblrOutput = "\nRecent Tumblr Posts: \n\n" + postOutput + "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+        console.log(tumblrOutput)
+        fs.appendFile('log.txt', tumblrOutput + "\n", (err) => {
+            if (err) throw err;
+          });
     });
     
 
